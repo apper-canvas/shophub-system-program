@@ -1,0 +1,30 @@
+[
+  {
+    "Id": 1,
+    "items": [
+      {
+        "productId": "1",
+        "quantity": 1,
+        "selectedOptions": {},
+        "addedAt": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "subtotal": 299.99,
+    "tax": 24.00,
+    "shipping": 9.99,
+    "total": 333.98,
+    "shippingAddress": {
+      "fullName": "John Doe",
+      "addressLine1": "123 Main St",
+      "addressLine2": "Apt 4B",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "phone": "555-0123"
+    },
+    "paymentMethod": "Credit Card ending in 4242",
+    "status": "Delivered",
+    "createdAt": "2024-01-15T10:35:00Z",
+    "estimatedDelivery": "Jan 20, 2024"
+  }
+]
