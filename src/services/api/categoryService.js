@@ -1,43 +1,147 @@
-import categoriesData from "../mockData/categories.json";
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
+import React from "react";
+import Error from "@/components/ui/Error";
 class CategoryService {
   constructor() {
-    this.categories = [...categoriesData];
+    const { ApperClient } = window.ApperSDK;
+    this.apperClient = new ApperClient({
+      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+    });
+  }
+
+  transformCategory(dbCategory) {
+    return {
+      Id: dbCategory.Id,
+      name: dbCategory.name_c || '',
+      icon: dbCategory.icon_c || 'Package',
+      productCount: parseInt(dbCategory.product_count_c) || 0,
+      parentId: dbCategory.parent_id_c?.Id || null
+    };
   }
 
   async getAll() {
-    await delay(200);
-    return [...this.categories];
+    try {
+      const response = await this.apperClient.fetchRecords('category_c', {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "icon_c"}},
+          {"field": {"Name": "product_count_c"}},
+          {"field": {"name": "parent_id_c"}, "referenceField": {"field": {"Name": "Id"}}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(c => this.transformCategory(c));
+    } catch (error) {
+      console.error("Error fetching categories:", error?.message || error);
+      return [];
+    }
   }
 
   async getById(id) {
-    await delay(150);
-    const category = this.categories.find(c => c.Id === parseInt(id));
-    if (!category) {
-      throw new Error("Category not found");
+    try {
+      const response = await this.apperClient.getRecordById('category_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "icon_c"}},
+          {"field": {"Name": "product_count_c"}},
+          {"field": {"name": "parent_id_c"}, "referenceField": {"field": {"Name": "Id"}}}
+        ]
+      });
+
+      if (!response.success || !response.data) {
+        console.error(response.message || "Category not found");
+        throw new Error("Category not found");
+      }
+
+      return this.transformCategory(response.data);
+    } catch (error) {
+      console.error(`Error fetching category ${id}:`, error?.message || error);
+      throw error;
     }
-    return { ...category };
   }
 
   async getMainCategories() {
-    await delay(200);
-    return this.categories.filter(c => c.parentId === null).map(c => ({ ...c }));
+    try {
+      const response = await this.apperClient.fetchRecords('category_c', {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "icon_c"}},
+          {"field": {"Name": "product_count_c"}},
+          {"field": {"name": "parent_id_c"}, "referenceField": {"field": {"Name": "Id"}}}
+        ],
+        where: [
+          {
+            "FieldName": "parent_id_c",
+            "Operator": "DoesNotHaveValue",
+            "Values": []
+          }
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(c => this.transformCategory(c));
+    } catch (error) {
+      console.error("Error fetching main categories:", error?.message || error);
+      return [];
+    }
   }
 
   async getSubcategories(parentId) {
-    await delay(200);
-    return this.categories.filter(c => c.parentId === parseInt(parentId)).map(c => ({ ...c }));
+    try {
+      const response = await this.apperClient.fetchRecords('category_c', {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "icon_c"}},
+          {"field": {"Name": "product_count_c"}},
+          {"field": {"name": "parent_id_c"}, "referenceField": {"field": {"Name": "Id"}}}
+        ],
+        where: [
+          {
+            "FieldName": "parent_id_c",
+            "Operator": "EqualTo",
+            "Values": [parseInt(parentId)]
+          }
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(c => this.transformCategory(c));
+    } catch (error) {
+      console.error("Error fetching subcategories:", error?.message || error);
+      return [];
+    }
   }
 
   async getCategoryTree() {
-    await delay(250);
-    const main = this.categories.filter(c => c.parentId === null);
-    return main.map(parent => ({
-      ...parent,
-      subcategories: this.categories.filter(c => c.parentId === parent.Id)
-    }));
+    try {
+      const allCategories = await this.getAll();
+      const mainCategories = allCategories.filter(c => c.parentId === null);
+      
+      return mainCategories.map(parent => ({
+        ...parent,
+        subcategories: allCategories.filter(c => c.parentId === parent.Id)
+      }));
+    } catch (error) {
+      console.error("Error fetching category tree:", error?.message || error);
+      return [];
+}
   }
 }
 

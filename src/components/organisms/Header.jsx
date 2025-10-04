@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import SearchBar from "@/components/molecules/SearchBar";
 import { useCart } from "@/hooks/useCart";
-
+import { AuthContext } from "@/App";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const { getCartCount } = useCart();
-  const navigate = useNavigate();
+const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   const categories = [
     { name: "Electronics", icon: "Laptop" },
@@ -36,7 +37,7 @@ const Header = () => {
             <SearchBar className="flex-1" />
           </div>
 
-          <nav className="hidden lg:flex items-center gap-4">
+<nav className="hidden lg:flex items-center gap-4">
             <div className="relative">
               <Button
                 variant="ghost"
@@ -86,6 +87,11 @@ const Header = () => {
               </Button>
             </Link>
 
+            <Button variant="ghost" onClick={logout}>
+              <ApperIcon name="LogOut" size={18} className="mr-2" />
+              Logout
+            </Button>
+
             <Link to="/cart">
               <Button variant="primary" className="relative">
                 <ApperIcon name="ShoppingCart" size={18} />
@@ -123,7 +129,7 @@ const Header = () => {
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden bg-white border-t border-gray-200"
           >
-            <nav className="px-4 py-4 space-y-2">
+<nav className="px-4 py-4 space-y-2">
               {categories.map((category) => (
                 <Link
                   key={category.name}
@@ -151,6 +157,16 @@ const Header = () => {
                 <ApperIcon name="Package" size={20} className="text-primary" />
                 <span className="font-medium text-gray-900">Orders</span>
               </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left"
+              >
+                <ApperIcon name="LogOut" size={20} className="text-primary" />
+                <span className="font-medium text-gray-900">Logout</span>
+              </button>
               <Link
                 to="/cart"
                 onClick={() => setMobileMenuOpen(false)}
